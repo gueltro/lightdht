@@ -24,6 +24,7 @@ import logging
 
 from krpcserver import KRPCServer, KRPCTimeout, KRPCError
 from routingtable import PrefixRoutingTable
+from routingtable import FlatRoutingTable
 
 # See http://docs.python.org/library/logging.html
 logger = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ class DHT(object):
         self._version = version
         self._server = KRPCServer(port, self._version)
 
-        self._rt = PrefixRoutingTable()
+        self._rt = FlatRoutingTable()
 
         # Thread details
         self._shutdown_flag = False
