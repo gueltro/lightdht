@@ -118,7 +118,9 @@ class DHT(object):
         self._server.handler = self.handler
 
         # Add the default nodes
-        DEFAULT_CONNECT_INFO = ('67.215.242.139', 6881) #(socket.gethostbyaddr("router.bittorrent.com")[2][0], 6881)
+        #DEFAULT_CONNECT_INFO = ('67.215.242.139', 6881)
+        DEFAULT_CONNECT_INFO = (socket.gethostbyaddr("router.bittorrent.com")[2][0], 6881)
+
         DEFAULT_NODE = Node(DEFAULT_CONNECT_INFO)
         DEFAULT_ID = self._server.ping(os.urandom(20), DEFAULT_NODE)['id']
         self._rt.update_entry(DEFAULT_ID, DEFAULT_NODE)
@@ -193,6 +195,7 @@ class DHT(object):
 
         # Add them to the routing table
         for node_id, node_c in decode_nodes(bnodes):
+            print (node_id, node_c)
             self._rt.update_entry(node_id, Node(node_c))
 
     def _recurse(self, target, function, max_attempts=10, result_key=None):
@@ -205,11 +208,13 @@ class DHT(object):
         logger.debug("Recursing to target %r" % target.encode("hex"))
         attempts = 0
         while attempts < max_attempts:
+            #print self._rt._nodes
+            #print self._rt.get_close_nodes(target)
+            attempts += 1
             for id_, node in self._rt.get_close_nodes(target):
                 try:
                     r = function(self._get_id(id_), node, target)
                     logger.debug("Recursion results from %r ", node.c)
-                    attempts += 1
                     if result_key and result_key in r:
                         return r[result_key]
                     if "nodes" in r:
@@ -217,6 +222,8 @@ class DHT(object):
                 except KRPCTimeout:
                     # The node did not reply.
                     # Blacklist it.
+                    print "BAAAAD"
+                    attempts += 1
                     self._rt.bad_node(id_, node)
                 except KRPCError:
                     # Sometimes we just flake out due to UDP being unreliable
@@ -311,7 +318,7 @@ if __name__ == "__main__":
     # Start it!
     with dht1:
         # Look up peers that are sharing one of the Ubuntu 12.04 ISO torrents
-        print dht1.get_peers("8ac3731ad4b039c05393b5404afa6e7397810b41".decode("hex"))
+        #print dht1.get_peers("8ac3731ad4b039c05393b5404afa6e7397810b41".decode("hex"))
         # Go to sleep and let the DHT service requests.
         while True:
             time.sleep(1)
